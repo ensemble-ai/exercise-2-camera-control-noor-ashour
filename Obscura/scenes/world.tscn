@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=4 uid="uid://88du8yjefx8j"]
+[gd_scene load_steps=15 format=4 uid="uid://88du8yjefx8j"]
 
 [ext_resource type="PackedScene" uid="uid://dtm13sp1jsrwi" path="res://scenes/vessel.tscn" id="1_oaql3"]
 [ext_resource type="Script" path="res://scripts/camera_selector.gd" id="2_qffo5"]
@@ -8,6 +8,9 @@
 [ext_resource type="PackedScene" uid="uid://kafb18nsdh54" path="res://scenes/terrain_manager.tscn" id="4_josyl"]
 [ext_resource type="Script" path="res://scripts/camera_controllers/auto_scroll.gd" id="5_l56bt"]
 [ext_resource type="AudioStream" uid="uid://6tbtl0jk0dlo" path="res://assets/audio/VGMA Challenge - July 16th.wav" id="5_o8tm3"]
+[ext_resource type="Script" path="res://scripts/camera_controllers/catch_up.gd" id="6_1lkm6"]
+[ext_resource type="Script" path="res://scripts/camera_controllers/target_focus.gd" id="7_vjvbd"]
+[ext_resource type="Script" path="res://scripts/camera_controllers/4_way_pushzone.gd" id="8_ocbcn"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_fwhhn"]
 _surfaces = [{
@@ -61,10 +64,59 @@ top_left = null
 bottom_right = null
 autoscroll_speed = 25.0
 target = NodePath("../../Vessel")
-dist_above_target = 20.0
 draw_camera_logic = true
 
 [node name="debug" type="Label" parent="Cameras/AutoScrollCamera"]
+visible = false
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("3_4fllx")
+
+[node name="CatchUpCamera" parent="Cameras" node_paths=PackedStringArray("target") instance=ExtResource("3_ttnp6")]
+process_priority = 3
+size = 50.0
+script = ExtResource("6_1lkm6")
+follow_speed = 10.0
+catchup_speed = 5.0
+leash_distance = null
+target = NodePath("../../Vessel")
+draw_camera_logic = true
+
+[node name="debug" type="Label" parent="Cameras/CatchUpCamera"]
+visible = false
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("3_4fllx")
+
+[node name="TargetFocusCamera" parent="Cameras" node_paths=PackedStringArray("target") instance=ExtResource("3_ttnp6")]
+process_priority = 3
+size = 50.0
+script = ExtResource("7_vjvbd")
+lead_speed = 10.0
+catchup_delay_duration = 2.0
+catchup_speed = 5.0
+leash_distance = null
+target = NodePath("../../Vessel")
+draw_camera_logic = true
+
+[node name="debug" type="Label" parent="Cameras/TargetFocusCamera"]
+visible = false
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("3_4fllx")
+
+[node name="4WayPushZoneCamera" parent="Cameras" node_paths=PackedStringArray("target") instance=ExtResource("3_ttnp6")]
+transform = Transform3D(1, 0, 0, 0, 1.19249e-08, 1, 0, -1, 1.19249e-08, 0, 30, 0)
+script = ExtResource("8_ocbcn")
+push_ratio = 2.0
+pushbox_top_left = null
+pushbox_bottom_right = null
+speedup_zone_top_left = null
+speedup_zone_bottom_right = null
+target = NodePath("../../Vessel")
+draw_camera_logic = true
+
+[node name="debug" type="Label" parent="Cameras/4WayPushZoneCamera"]
 offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("3_4fllx")
@@ -82,7 +134,7 @@ script = ExtResource("3_4fllx")
 
 [node name="CameraSelector" type="Node" parent="." node_paths=PackedStringArray("cameras")]
 script = ExtResource("2_qffo5")
-cameras = [NodePath("../Cameras/PositionLockCamera"), NodePath("../Cameras/AutoScrollCamera"), NodePath("../Cameras/PushBoxCamera")]
+cameras = [NodePath("../Cameras/PositionLockCamera"), NodePath("../Cameras/AutoScrollCamera"), NodePath("../Cameras/CatchUpCamera"), NodePath("../Cameras/TargetFocusCamera"), NodePath("../Cameras/4WayPushZoneCamera"), NodePath("../Cameras/PushBoxCamera")]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, -0.5, 0, -2.18557e-08, -3.78552e-08, 1, -0.5, -0.866025, -4.37114e-08, 0, 70, 0)

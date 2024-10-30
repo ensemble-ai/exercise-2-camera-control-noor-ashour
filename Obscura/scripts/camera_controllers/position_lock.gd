@@ -10,13 +10,13 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if !current:
+		center_camera_on_target()
 		return
 	
 	if draw_camera_logic:
 		draw_logic()
 	
-	global_position.x = target.global_position.x
-	global_position.z = target.global_position.z
+	center_camera_on_target()
 	super(delta)
 
 

@@ -44,6 +44,10 @@ func _process(delta: float) -> void:
 	position.y = target.position.y + dist_above_target
 
 
+func center_camera_on_target() -> void:
+	global_position.x = target.global_position.x
+	global_position.z = target.global_position.z
+
 
 func draw_logic() -> void:
 	pass

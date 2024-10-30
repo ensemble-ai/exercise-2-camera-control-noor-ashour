@@ -18,6 +18,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if !current:
+		center_camera_on_target()
 		return
 	
 	if draw_camera_logic:
