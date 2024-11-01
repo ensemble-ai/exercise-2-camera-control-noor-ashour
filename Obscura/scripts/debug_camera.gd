@@ -8,13 +8,15 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta):
-	text = str(round((get_parent() as Node3D).global_position))
+	text = get_parent().name
 	text += "\n"
-	text += str(round((%Vessel as Vessel).global_position))
+	text += "Camera Global Pos.: " + str(round((get_parent() as Node3D).global_position))
 	text += "\n"
-	text += str(round( 1.0 / _delta ))
+	text += "Target Global Pos.: " + str(round((%Vessel as Vessel).global_position))
 	text += "\n"
-	text += str(Vector2(
+	text += "Delta: " + str(round( 1.0 / _delta ))
+	text += "\n"
+	text += "Input: " + str(Vector2(
 		Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left"),
 		Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
 		).limit_length(1.0))

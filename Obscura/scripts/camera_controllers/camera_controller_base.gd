@@ -9,6 +9,8 @@ extends Camera3D
 @export var max_zoom:float = 100.0
 @export var draw_camera_logic:bool = false
 
+var cross_length : int = 1;
+
 #camera tilt around the z axis in radians
 #var _camera_tilt_rad:float = 0.0
 #var _camera_tilt_speed:float = 0.1
@@ -42,6 +44,80 @@ func _process(delta: float) -> void:
 	position.y = target.position.y + dist_above_target
 
 
+func center_camera_on_target() -> void:
+	global_position.x = target.global_position.x
+	global_position.z = target.global_position.z
+
 
 func draw_logic() -> void:
 	pass
+
+func draw_box(box_width : float, box_height : float) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	var immediate_mesh := ImmediateMesh.new()
+	var material := ORMMaterial3D.new()
+	
+	mesh_instance.mesh = immediate_mesh
+	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	
+	var left:float = -box_width / 2
+	var right:float = box_width / 2
+	var top:float = -box_height / 2
+	var bottom:float = box_height / 2
+	
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES, material)
+	immediate_mesh.surface_add_vertex(Vector3(right, 0, top))
+	immediate_mesh.surface_add_vertex(Vector3(right, 0, bottom))
+	
+	immediate_mesh.surface_add_vertex(Vector3(right, 0, bottom))
+	immediate_mesh.surface_add_vertex(Vector3(left, 0, bottom))
+	
+	immediate_mesh.surface_add_vertex(Vector3(left, 0, bottom))
+	immediate_mesh.surface_add_vertex(Vector3(left, 0, top))
+	
+	immediate_mesh.surface_add_vertex(Vector3(left, 0, top))
+	immediate_mesh.surface_add_vertex(Vector3(right, 0, top))
+	immediate_mesh.surface_end()
+
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color.BLACK
+	
+	add_child(mesh_instance)
+	mesh_instance.global_transform = Transform3D.IDENTITY
+	mesh_instance.global_position = Vector3(global_position.x, target.global_position.y, global_position.z)
+	
+	#mesh is freed after one update of _process
+	await get_tree().process_frame
+	mesh_instance.queue_free()
+
+
+func draw_cross() -> void:
+	var mesh_instance := MeshInstance3D.new()
+	var immediate_mesh := ImmediateMesh.new()
+	var material := ORMMaterial3D.new()
+	
+	material.no_depth_test = true
+	mesh_instance.mesh = immediate_mesh
+	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	
+	
+	immediate_mesh.surface_begin(Mesh.PRIMITIVE_LINES, material)
+	immediate_mesh.surface_set_normal(Vector3(0, 1, 0))
+	immediate_mesh.surface_set_uv(Vector2(1, 1))
+	immediate_mesh.surface_add_vertex(Vector3(0, 0, cross_length))
+	immediate_mesh.surface_add_vertex(Vector3(0, 0, -cross_length))
+	immediate_mesh.surface_add_vertex(Vector3(cross_length, 0, 0))
+	immediate_mesh.surface_add_vertex(Vector3(-cross_length, 0, 0))
+	
+	immediate_mesh.surface_end()
+
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = Color.WHITE
+	
+	add_child(mesh_instance)
+	mesh_instance.global_transform = Transform3D.IDENTITY
+	mesh_instance.global_position = Vector3(global_position.x, target.global_position.y, global_position.z)
+	
+	#mesh is freed after one update of _process
+	await get_tree().process_frame
+	mesh_instance.queue_free()
