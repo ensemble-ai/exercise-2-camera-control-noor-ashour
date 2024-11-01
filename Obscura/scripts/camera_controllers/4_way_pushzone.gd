@@ -2,17 +2,16 @@ class_name FourWayPushZone
 extends CameraControllerBase
 
 
-@export var box_width:float = 10.0
-@export var box_height:float = 10.0
-
-var inner_box_width:float = box_width - (box_width / 2)
-var inner_box_height:float = box_height - (box_height / 2)
-
 @export var push_ratio:float = 2.0
-@export var pushbox_top_left:Vector2 = Vector2(0, box_height)
-@export var pushbox_bottom_right:Vector2 = Vector2(box_width, 0)
-@export var speedup_zone_top_left:Vector2 = Vector2(0, inner_box_height)
-@export var speedup_zone_bottom_right:Vector2 = Vector2(inner_box_width, 0)
+@export var pushbox_top_left:Vector2 = Vector2(0, 10)
+@export var pushbox_bottom_right:Vector2 = Vector2(10, 0)
+@export var speedup_zone_top_left:Vector2 = Vector2(0, 5)
+@export var speedup_zone_bottom_right:Vector2 = Vector2(5, 0)
+
+var box_width:float = pushbox_bottom_right.x
+var box_height:float = pushbox_top_left.y
+var inner_box_width:float = speedup_zone_bottom_right.x
+var inner_box_height:float = speedup_zone_top_left.y
 
 
 func _ready() -> void:
@@ -28,70 +27,72 @@ func _process(delta: float) -> void:
 	if draw_camera_logic:
 		draw_logic()
 	
-	var tpos = target.global_position
-	var cpos = global_position
-	var vertical_speedup_diff = (box_height - inner_box_height) / 2.0
-	var horizontal_speedup_diff = (box_width - inner_box_width) / 2.0
-	
-	#boundary checks
-	#left
-	var diff_between_left_edges = (tpos.x - target.WIDTH / 2.0) - (cpos.x - box_width / 2.0)
-	#if diff_between_left_edges < 0:
-	#	global_position.x += diff_between_left_edges
-	#right
-	var diff_between_right_edges = (tpos.x + target.WIDTH / 2.0) - (cpos.x + box_width / 2.0)
-	#if diff_between_right_edges > 0:
-	#	global_position.x += diff_between_right_edges
-	# top
-	var diff_between_top_edges = (tpos.z - target.HEIGHT / 2.0) - (cpos.z - box_height / 2.0)
-	#if diff_between_top_edges < 0:
-	#	global_position.z += diff_between_top_edges
-	#bottom
-	var diff_between_bottom_edges = (tpos.z + target.HEIGHT / 2.0) - (cpos.z + box_height / 2.0)
-	#if diff_between_bottom_edges > 0:
-	#	global_position.z += diff_between_bottom_edges
-	#var diff_btn_top_left_corner = (pushbox_top_left - Vector2(diff_between_left_edges, diff_between_top_edges)).round()
-	
-	var diff_btn_inner_left_edges = (tpos.x - target.WIDTH / 2.0) - (cpos.x - inner_box_width / 2.0)
-	var diff_btn_inner_right_edges = (tpos.x + target.WIDTH / 2.0) - (cpos.x + inner_box_width / 2.0)
-	var diff_btn_inner_top_edges = (tpos.z - target.HEIGHT / 2.0) - (cpos.z - inner_box_height / 2.0)
-	var diff_btn_inner_bottom_edges = (tpos.z + target.HEIGHT / 2.0) - (cpos.z + inner_box_height / 2.0)
-	
-	var is_target_touching_pushbox = false
-	if (diff_between_left_edges < 0 or 
-		diff_between_right_edges < 0 or
-		diff_between_top_edges < 0 or 
-		diff_between_bottom_edges < 0):
-		is_target_touching_pushbox = true
-	
-	var is_target_touching_speedup_box = false
-	if (diff_btn_inner_left_edges < 0 or 
-		diff_btn_inner_right_edges < 0 or
-		diff_btn_inner_top_edges < 0 or 
-		diff_btn_inner_bottom_edges < 0):
-		is_target_touching_speedup_box = true
-	
-	if (target.velocity != Vector3.ZERO):
-		
-		if diff_btn_inner_left_edges < 0:
-			$"../../debug2".text = str("We're moving!")
-			global_position.x += -vertical_speedup_diff * push_ratio
-		elif diff_btn_inner_right_edges < 0:
-			global_position.x += vertical_speedup_diff * push_ratio
-		elif diff_btn_inner_top_edges < 0:
-			global_position.z += -horizontal_speedup_diff * push_ratio
-		elif diff_btn_inner_bottom_edges < 0:
-			global_position.z += horizontal_speedup_diff * push_ratio
-			
-		
-		#global_position.x = target.velocity.x * push_ratio
-		#global_position.z = target.velocity.z * push_ratio
-	#else:
-	#	center_camera_on_target()
-	
+	if target.velocity != Vector3.ZERO:
+		var tpos:Vector3 = target.global_position
+		var cpos:Vector3 = global_position
+		var speed:float = 5.0
+		var final_speed:float = 0.0
+		if !is_touching_pushbox(tpos, cpos):
+			if is_touching_speedup_zone(tpos):
+				final_speed = speed * push_ratio
+				if is_touching_a_corner():
+					final_speed -= 2.0
+		else:
+			final_speed = box_width - (target.WIDTH / 2.0)
+		global_position = global_position.lerp(target.global_position, final_speed * delta)
 	
 	super(delta)
 
+
+func is_touching_pushbox(tpos:Vector3, cpos:Vector3) -> bool:
+	var is_touching:bool = false
+	
+	var diff_between_left_edges:float =  (tpos.x - target.WIDTH / 2.0) - (cpos.x - box_width / 2.0)
+	var diff_between_right_edges:float = (tpos.x + target.WIDTH / 2.0) - (cpos.x + box_width / 2.0)
+	var diff_between_top_edges:float = (tpos.z - target.HEIGHT / 2.0) - (cpos.z - box_height / 2.0)
+	var diff_between_bottom_edges:float = (tpos.z + target.HEIGHT / 2.0) - (cpos.z + box_height / 2.0)
+	
+	if (
+			diff_between_left_edges < 0 
+			or diff_between_right_edges > 0
+			or diff_between_bottom_edges > 0
+			or diff_between_top_edges < 0
+	):
+		is_touching = true
+	
+	return is_touching
+
+
+func is_touching_speedup_zone(tpos:Vector3) -> bool:
+	var is_touching_speedup:bool = false
+	
+	var diff_between_left_edges:float =  (tpos.x - target.WIDTH / 2.0)
+	var diff_between_right_edges:float = (tpos.x + target.WIDTH / 2.0)
+	var diff_between_top_edges:float = (tpos.z - target.HEIGHT / 2.0)
+	var diff_between_bottom_edges:float = (tpos.z + target.HEIGHT / 2.0)
+	
+	if (
+		diff_between_left_edges >= speedup_zone_top_left.x
+		or diff_between_right_edges <= speedup_zone_bottom_right.x
+		or diff_between_top_edges >= speedup_zone_top_left.y
+		or diff_between_bottom_edges <= speedup_zone_bottom_right.y
+	):
+		is_touching_speedup = true
+	
+	return is_touching_speedup
+
+
+func is_touching_a_corner() -> bool:
+	var is_touching:bool = false
+	var input = Vector2(
+		Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left"),
+		Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
+		).limit_length(1.0)
+	
+	if abs(input.x) < 1 and abs(input.y) > 0: # if input vector is something like (0.707..., 0.707...)
+		is_touching = true 
+
+	return is_touching
 
 func draw_logic() -> void:
 	draw_box(box_width, box_height)

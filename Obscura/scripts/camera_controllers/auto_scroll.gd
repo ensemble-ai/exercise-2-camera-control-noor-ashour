@@ -1,7 +1,6 @@
 class_name AutoScroll
 extends CameraControllerBase
 
-
 @export var box_width:float = 10.0
 @export var box_height:float = 10.0
 @export var top_left:Vector2 = Vector2(0, box_height)
@@ -53,6 +52,7 @@ func _process(delta: float) -> void:
 	var diff_btn_top_left_corner = (top_left - Vector2(diff_between_left_edges, diff_between_top_edges)).round()
 	var diff_btn_bottom_right_corner = (bottom_right - Vector2(diff_between_right_edges, diff_between_bottom_edges)).round()
 	
+	# Check if vessel is near a corner
 	if diff_btn_top_left_corner.is_equal_approx(top_left):
 		target.global_position.x += (autoscroll_speed + corner_pushback_value) * delta
 		target.global_position.z += (autoscroll_speed + corner_pushback_value) * delta
